@@ -1,9 +1,11 @@
 const mysql = require('mysql2/promise');
 const fs = require('fs');
+const path = require('path');
 const readline = require('readline');
 
 // Caminho do arquivo de configuração
 const configFilePath = './dbConfig.json';
+const jsonDirectoryPath = './bkp'; // Diretório para os arquivos JSON
 
 // Configuração do readline
 const rl = readline.createInterface({
@@ -11,11 +13,21 @@ const rl = readline.createInterface({
     output: process.stdout
 });
 
+// Função para garantir que o diretório existe
+function ensureDirectoryExistence(filePath) {
+    const dirname = path.dirname(filePath);
+    if (fs.existsSync(dirname)) {
+        return true;
+    }
+    fs.mkdirSync(dirname, { recursive: true });
+    return true;
+}
+
 // Função para obter ou criar configuração do banco de dados
 async function getDBConfig() {
     if (fs.existsSync(configFilePath)) {
         const config = JSON.parse(fs.readFileSync(configFilePath, 'utf-8'));
-        console.log(`\n✅ Configuração encontrada! Usando as configurações salvas:`);
+        console.log(`\n✅ Configuração encontrada! Usando as configurações salvas:`)
         console.log(config);
         return config;
     }
@@ -32,6 +44,7 @@ async function getDBConfig() {
                     config.password = password;
                     rl.question("🔑 Nome do Banco de Dados: ", (database) => {
                         config.database = database;
+                        ensureDirectoryExistence(configFilePath); // Garante que o diretório exista
                         fs.writeFileSync(configFilePath, JSON.stringify(config, null, 2));
                         console.log("\n✅ Configuração salva no arquivo 'dbConfig.json'.");
                         resolve();
@@ -55,7 +68,10 @@ async function exportTableToJSON(config, tableName) {
             data: rows
         };
 
-        fs.writeFileSync(`${tableName}.json`, JSON.stringify(result, null, 2));
+        // Garante que o diretório existe antes de escrever o arquivo JSON
+        ensureDirectoryExistence(`${jsonDirectoryPath}/${tableName}.json`);
+
+        fs.writeFileSync(`${jsonDirectoryPath}/${tableName}.json`, JSON.stringify(result, null, 2));
         console.log(`\n✨ Dados exportados para o arquivo **"${tableName}.json"** com sucesso! ✨`);
 
         await connection.end();
@@ -70,6 +86,11 @@ async function importJSONToTable(config, jsonFile, tableName) {
         const connection = await mysql.createConnection(config);
         const fileContent = fs.readFileSync(jsonFile, 'utf-8');
         const jsonData = JSON.parse(fileContent);
+
+        // Verifica se os dados do arquivo JSON estão no formato esperado
+        if (!jsonData.data || !Array.isArray(jsonData.data) || jsonData.data.length === 0) {
+            throw new Error('O arquivo JSON não contém dados válidos.');
+        }
 
         const keys = Object.keys(jsonData.data[0]);
         const placeholders = keys.map(() => '?').join(',');
