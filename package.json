@@ -1,29 +1,59 @@
 {
   "name": "mysqltojson",
-  "version": "1.0.0",
-  "description": "mysqltojson importer and exporter",
-  "main": "index.js ",
-  "scripts": {
-    "test": "node index.js "
+  "version": "2.0.0",
+  "description": "Modern CLI to export and import MySQL tables to and from JSON files, with schema dump, batched inserts, streaming, env-var config and interactive fallback.",
+  "type": "module",
+  "bin": {
+    "mysqltojson": "dist/index.js"
   },
+  "main": "dist/index.js",
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "dev": "tsx src/index.ts",
+    "start": "node dist/index.js",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "lint": "tsc -p tsconfig.json --noEmit",
+    "prepublishOnly": "npm run build"
+  },
+  "keywords": [
+    "mysql",
+    "json",
+    "backup",
+    "dump",
+    "export",
+    "import",
+    "cli",
+    "typescript",
+    "database",
+    "migration"
+  ],
+  "author": "Henrique Carmellim",
+  "license": "ISC",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/henriquecarmellim/MySQLtoJSON.git"
   },
-  "keywords": [
-    "mysql",
-    "backup",
-    "mysqltojson",
-    "json"
-  ],
-  "author": "gxOTERROR",
-  "license": "ISC",
   "bugs": {
     "url": "https://github.com/henriquecarmellim/MySQLtoJSON/issues"
   },
   "homepage": "https://github.com/henriquecarmellim/MySQLtoJSON#readme",
+  "engines": {
+    "node": ">=18"
+  },
   "dependencies": {
-    "mysql2": "^3.11.5",
-    "readline": "^1.3.0"
+    "commander": "^12.1.0",
+    "mysql2": "^3.11.5"
+  },
+  "devDependencies": {
+    "@types/node": "^22.9.0",
+    "tsx": "^4.19.2",
+    "typescript": "^5.6.3",
+    "vitest": "^2.1.5"
   }
 }
